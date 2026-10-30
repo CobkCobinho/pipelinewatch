@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "Report",
+    "displayName": "PipelineWatch"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "62672919-e6aa-4599-b78c-f96130527b8c"
+  }
+}

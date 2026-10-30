@@ -1,0 +1,28 @@
+{
+  "name": "PipelineWatch",
+  "dataColors": [
+    "#38D6BD",
+    "#F57883",
+    "#F4BA62",
+    "#779AFF",
+    "#B08EFF",
+    "#6BC8E6"
+  ],
+  "background": "#142238",
+  "foreground": "#E6EDF7",
+  "tableAccent": "#38D6BD",
+  "textClasses": {
+    "label": {
+      "color": "#A3B5CE",
+      "fontFace": "Segoe UI"
+    },
+    "title": {
+      "color": "#E6EDF7",
+      "fontFace": "Segoe UI Semibold"
+    },
+    "callout": {
+      "color": "#38D6BD",
+      "fontFace": "Segoe UI Semibold"
+    }
+  }
+}
