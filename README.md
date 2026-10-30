@@ -4,7 +4,7 @@ Monitoramento de pipelines de engenharia eletroeletrônica automotiva com **Pyth
 
 > Projeto pessoal desenvolvido durante meu período de estágio em Engenharia de Dados, para praticar construção e monitoramento de pipelines. Usa exclusivamente dados sintéticos criados do zero. Não contém dados, código, infraestrutura ou regras internas de qualquer empresa, nem representa uma solução corporativa.
 
-![Visão geral do Power BI](docs/overview.png)
+![Visão geral do Power BI](docs/overview-relatorio.png)
 
 ## O que você pode explorar
 
@@ -14,7 +14,7 @@ Monitoramento de pipelines de engenharia eletroeletrônica automotiva com **Pyth
 - **API:** consulte cargas, detalhes, métricas, nós/conexões e tabelas CSV; execute uma nova carga por HTTP.
 - **Automação:** envie cargas periódicas por Python; os testes e a geração de uma amostra também rodam no GitHub Actions.
 
-![Fluxo das etapas no Power BI](docs/flow.png)
+![Fluxo das etapas no Power BI](docs/flow-relatorio.png)
 
 ## Executar localmente
 
