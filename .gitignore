@@ -1,0 +1,17 @@
+__pycache__/
+*.py[cod]
+.venv/
+**/bin/
+**/obj/
+.vs/
+*.user
+.env
+data/bronze/
+data/pipelinewatch.db*
+data/gold/
+**/.pbi/
+*.pbix
+*.pbit
+*.log
+artifacts/
+.runtime/
