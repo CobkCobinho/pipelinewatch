@@ -1,0 +1,33 @@
+name: Validate PipelineWatch
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  integration:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Build API
+        run: dotnet build api/PipelineWatch.Api -c Release
+      - name: SQL, pipeline and HTTP integration tests
+        env:
+          PIPELINEWATCH_API_TESTS: '1'
+        run: python -m unittest discover -s tests -v
+      - name: Generate synthetic demo
+        run: python -m pipelinewatch demo --batches 24
+      - name: Validate Power BI definitions
+        run: python scripts/check_report.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: synthetic-gold-sample
+          path: data/gold/
+          retention-days: 7
