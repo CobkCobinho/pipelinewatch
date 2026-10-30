@@ -1,0 +1,514 @@
+{
+  "name": "PipelineWatch",
+  "compatibilityLevel": 1601,
+  "model": {
+    "culture": "pt-BR",
+    "defaultPowerBIDataSourceVersion": "powerBI_V3",
+    "tables": [
+      {
+        "name": "Runs",
+        "columns": [
+          {
+            "name": "run_id",
+            "dataType": "string",
+            "sourceColumn": "run_id",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "event_date",
+            "dataType": "dateTime",
+            "sourceColumn": "event_date",
+            "summarizeBy": "none",
+            "formatString": "dd/MM/yyyy"
+          },
+          {
+            "name": "created_at",
+            "dataType": "string",
+            "sourceColumn": "created_at",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "pipeline_name",
+            "dataType": "string",
+            "sourceColumn": "pipeline_name",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "component_family",
+            "dataType": "string",
+            "sourceColumn": "component_family",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "plant",
+            "dataType": "string",
+            "sourceColumn": "plant",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "scenario",
+            "dataType": "string",
+            "sourceColumn": "scenario",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "seed",
+            "dataType": "int64",
+            "sourceColumn": "seed",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "status",
+            "dataType": "string",
+            "sourceColumn": "status",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "input_rows",
+            "dataType": "int64",
+            "sourceColumn": "input_rows",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "accepted_rows",
+            "dataType": "int64",
+            "sourceColumn": "accepted_rows",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "rejected_rows",
+            "dataType": "int64",
+            "sourceColumn": "rejected_rows",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "error_count",
+            "dataType": "int64",
+            "sourceColumn": "error_count",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "duration_ms",
+            "dataType": "double",
+            "sourceColumn": "duration_ms",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "measured_ms",
+            "dataType": "double",
+            "sourceColumn": "measured_ms",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "quality_pct",
+            "dataType": "double",
+            "sourceColumn": "quality_pct",
+            "summarizeBy": "none"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "Runs",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Source = Csv.Document(Web.Contents(ApiBaseUrl, [RelativePath=\"api/powerbi/runs\"]), [Delimiter=\",\", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),",
+                "    Headers = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),",
+                "    Typed = Table.TransformColumnTypes(Headers, {{\"run_id\", type text}, {\"event_date\", type date}, {\"created_at\", type text}, {\"pipeline_name\", type text}, {\"component_family\", type text}, {\"plant\", type text}, {\"scenario\", type text}, {\"seed\", Int64.Type}, {\"status\", type text}, {\"input_rows\", Int64.Type}, {\"accepted_rows\", Int64.Type}, {\"rejected_rows\", Int64.Type}, {\"error_count\", Int64.Type}, {\"duration_ms\", type number}, {\"measured_ms\", type number}, {\"quality_pct\", type number}}, \"en-US\")",
+                "in",
+                "    Typed"
+              ]
+            }
+          }
+        ],
+        "measures": [
+          {
+            "name": "Execuções",
+            "expression": "COALESCE(COUNTROWS(Runs),0)",
+            "formatString": "#,0"
+          },
+          {
+            "name": "Recebidos",
+            "expression": "SUM(Runs[input_rows])",
+            "formatString": "#,0"
+          },
+          {
+            "name": "Aprovados",
+            "expression": "SUM(Runs[accepted_rows])",
+            "formatString": "#,0"
+          },
+          {
+            "name": "Rejeitados",
+            "expression": "SUM(Runs[rejected_rows])",
+            "formatString": "#,0"
+          },
+          {
+            "name": "Qualidade",
+            "expression": "DIVIDE([Aprovados], [Recebidos])",
+            "formatString": "0.0%"
+          },
+          {
+            "name": "Falhas",
+            "expression": "COALESCE(CALCULATE(COUNTROWS(Runs), KEEPFILTERS(Runs[status] = \"Falha\")),0)",
+            "formatString": "#,0"
+          },
+          {
+            "name": "Alertas",
+            "expression": "COALESCE(CALCULATE(COUNTROWS(Runs), KEEPFILTERS(Runs[status] = \"Alerta\")),0)",
+            "formatString": "#,0"
+          },
+          {
+            "name": "Ocorrências",
+            "expression": "COALESCE(COUNTROWS(Errors),0)",
+            "formatString": "#,0"
+          },
+          {
+            "name": "Duração simulada (s)",
+            "expression": "DIVIDE(AVERAGE(Runs[duration_ms]),1000)",
+            "formatString": "0.00 \"s\""
+          },
+          {
+            "name": "Rejeição",
+            "expression": "DIVIDE([Rejeitados], [Recebidos])",
+            "formatString": "0.0%"
+          },
+          {
+            "name": "Gerar · saídas",
+            "expression": "CALCULATE(SUM(Events[output_rows]), Events[stage_name] = \"Gerar\")",
+            "formatString": "#,0"
+          },
+          {
+            "name": "Gerar · cor",
+            "expression": "VAR F = CALCULATE(COUNTROWS(Events), Events[stage_name]=\"Gerar\", Events[status]=\"Falha\") VAR A = CALCULATE(COUNTROWS(Events), Events[stage_name]=\"Gerar\", Events[status]=\"Alerta\") VAR I = CALCULATE(COUNTROWS(Events), Events[stage_name]=\"Gerar\", Events[status]=\"Ignorada\") VAR N = CALCULATE(COUNTROWS(Events), Events[stage_name]=\"Gerar\") RETURN SWITCH(TRUE(), F>0,\"#F57883\", A>0,\"#F4BA62\", I=N,\"#A3B5CE\",\"#38D6BD\")",
+            "formatString": ""
+          },
+          {
+            "name": "Bronze · saídas",
+            "expression": "CALCULATE(SUM(Events[output_rows]), Events[stage_name] = \"Bronze\")",
+            "formatString": "#,0"
+          },
+          {
+            "name": "Bronze · cor",
+            "expression": "VAR F = CALCULATE(COUNTROWS(Events), Events[stage_name]=\"Bronze\", Events[status]=\"Falha\") VAR A = CALCULATE(COUNTROWS(Events), Events[stage_name]=\"Bronze\", Events[status]=\"Alerta\") VAR I = CALCULATE(COUNTROWS(Events), Events[stage_name]=\"Bronze\", Events[status]=\"Ignorada\") VAR N = CALCULATE(COUNTROWS(Events), Events[stage_name]=\"Bronze\") RETURN SWITCH(TRUE(), F>0,\"#F57883\", A>0,\"#F4BA62\", I=N,\"#A3B5CE\",\"#38D6BD\")",
+            "formatString": ""
+          },
+          {
+            "name": "Validar · saídas",
+            "expression": "CALCULATE(SUM(Events[output_rows]), Events[stage_name] = \"Validar\")",
+            "formatString": "#,0"
+          },
+          {
+            "name": "Validar · cor",
+            "expression": "VAR F = CALCULATE(COUNTROWS(Events), Events[stage_name]=\"Validar\", Events[status]=\"Falha\") VAR A = CALCULATE(COUNTROWS(Events), Events[stage_name]=\"Validar\", Events[status]=\"Alerta\") VAR I = CALCULATE(COUNTROWS(Events), Events[stage_name]=\"Validar\", Events[status]=\"Ignorada\") VAR N = CALCULATE(COUNTROWS(Events), Events[stage_name]=\"Validar\") RETURN SWITCH(TRUE(), F>0,\"#F57883\", A>0,\"#F4BA62\", I=N,\"#A3B5CE\",\"#38D6BD\")",
+            "formatString": ""
+          },
+          {
+            "name": "Silver · saídas",
+            "expression": "CALCULATE(SUM(Events[output_rows]), Events[stage_name] = \"Silver\")",
+            "formatString": "#,0"
+          },
+          {
+            "name": "Silver · cor",
+            "expression": "VAR F = CALCULATE(COUNTROWS(Events), Events[stage_name]=\"Silver\", Events[status]=\"Falha\") VAR A = CALCULATE(COUNTROWS(Events), Events[stage_name]=\"Silver\", Events[status]=\"Alerta\") VAR I = CALCULATE(COUNTROWS(Events), Events[stage_name]=\"Silver\", Events[status]=\"Ignorada\") VAR N = CALCULATE(COUNTROWS(Events), Events[stage_name]=\"Silver\") RETURN SWITCH(TRUE(), F>0,\"#F57883\", A>0,\"#F4BA62\", I=N,\"#A3B5CE\",\"#38D6BD\")",
+            "formatString": ""
+          },
+          {
+            "name": "Gold · saídas",
+            "expression": "CALCULATE(SUM(Events[output_rows]), Events[stage_name] = \"Gold\")",
+            "formatString": "#,0"
+          },
+          {
+            "name": "Gold · cor",
+            "expression": "VAR F = CALCULATE(COUNTROWS(Events), Events[stage_name]=\"Gold\", Events[status]=\"Falha\") VAR A = CALCULATE(COUNTROWS(Events), Events[stage_name]=\"Gold\", Events[status]=\"Alerta\") VAR I = CALCULATE(COUNTROWS(Events), Events[stage_name]=\"Gold\", Events[status]=\"Ignorada\") VAR N = CALCULATE(COUNTROWS(Events), Events[stage_name]=\"Gold\") RETURN SWITCH(TRUE(), F>0,\"#F57883\", A>0,\"#F4BA62\", I=N,\"#A3B5CE\",\"#38D6BD\")",
+            "formatString": ""
+          },
+          {
+            "name": "Quarentena · saídas",
+            "expression": "CALCULATE(SUM(Events[output_rows]), Events[stage_name] = \"Quarentena\")",
+            "formatString": "#,0"
+          },
+          {
+            "name": "Quarentena · cor",
+            "expression": "VAR F = CALCULATE(COUNTROWS(Events), Events[stage_name]=\"Quarentena\", Events[status]=\"Falha\") VAR A = CALCULATE(COUNTROWS(Events), Events[stage_name]=\"Quarentena\", Events[status]=\"Alerta\") VAR I = CALCULATE(COUNTROWS(Events), Events[stage_name]=\"Quarentena\", Events[status]=\"Ignorada\") VAR N = CALCULATE(COUNTROWS(Events), Events[stage_name]=\"Quarentena\") RETURN SWITCH(TRUE(), F>0,\"#F57883\", A>0,\"#F4BA62\", I=N,\"#A3B5CE\",\"#38D6BD\")",
+            "formatString": ""
+          }
+        ]
+      },
+      {
+        "name": "Events",
+        "columns": [
+          {
+            "name": "run_id",
+            "dataType": "string",
+            "sourceColumn": "run_id",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "stage_name",
+            "dataType": "string",
+            "sourceColumn": "stage_name",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "stage_index",
+            "dataType": "int64",
+            "sourceColumn": "stage_index",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "status",
+            "dataType": "string",
+            "sourceColumn": "status",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "input_rows",
+            "dataType": "int64",
+            "sourceColumn": "input_rows",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "output_rows",
+            "dataType": "int64",
+            "sourceColumn": "output_rows",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "rejected_rows",
+            "dataType": "int64",
+            "sourceColumn": "rejected_rows",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "duration_ms",
+            "dataType": "double",
+            "sourceColumn": "duration_ms",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "event_date",
+            "dataType": "dateTime",
+            "sourceColumn": "event_date",
+            "summarizeBy": "none",
+            "formatString": "dd/MM/yyyy"
+          },
+          {
+            "name": "pipeline_name",
+            "dataType": "string",
+            "sourceColumn": "pipeline_name",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "component_family",
+            "dataType": "string",
+            "sourceColumn": "component_family",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "plant",
+            "dataType": "string",
+            "sourceColumn": "plant",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "run_status",
+            "dataType": "string",
+            "sourceColumn": "run_status",
+            "summarizeBy": "none"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "Events",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Source = Csv.Document(Web.Contents(ApiBaseUrl, [RelativePath=\"api/powerbi/events\"]), [Delimiter=\",\", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),",
+                "    Headers = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),",
+                "    Typed = Table.TransformColumnTypes(Headers, {{\"run_id\", type text}, {\"stage_name\", type text}, {\"stage_index\", Int64.Type}, {\"status\", type text}, {\"input_rows\", Int64.Type}, {\"output_rows\", Int64.Type}, {\"rejected_rows\", Int64.Type}, {\"duration_ms\", type number}, {\"event_date\", type date}, {\"pipeline_name\", type text}, {\"component_family\", type text}, {\"plant\", type text}, {\"run_status\", type text}}, \"en-US\")",
+                "in",
+                "    Typed"
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "name": "Errors",
+        "columns": [
+          {
+            "name": "error_id",
+            "dataType": "int64",
+            "sourceColumn": "error_id",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "run_id",
+            "dataType": "string",
+            "sourceColumn": "run_id",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "row_number",
+            "dataType": "int64",
+            "sourceColumn": "row_number",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "record_id",
+            "dataType": "string",
+            "sourceColumn": "record_id",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "rule_name",
+            "dataType": "string",
+            "sourceColumn": "rule_name",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "field",
+            "dataType": "string",
+            "sourceColumn": "field",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "message",
+            "dataType": "string",
+            "sourceColumn": "message",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "event_date",
+            "dataType": "dateTime",
+            "sourceColumn": "event_date",
+            "summarizeBy": "none",
+            "formatString": "dd/MM/yyyy"
+          },
+          {
+            "name": "pipeline_name",
+            "dataType": "string",
+            "sourceColumn": "pipeline_name",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "component_family",
+            "dataType": "string",
+            "sourceColumn": "component_family",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "plant",
+            "dataType": "string",
+            "sourceColumn": "plant",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "run_status",
+            "dataType": "string",
+            "sourceColumn": "run_status",
+            "summarizeBy": "none"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "Errors",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Source = Csv.Document(Web.Contents(ApiBaseUrl, [RelativePath=\"api/powerbi/errors\"]), [Delimiter=\",\", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),",
+                "    Headers = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),",
+                "    Typed = Table.TransformColumnTypes(Headers, {{\"error_id\", Int64.Type}, {\"run_id\", type text}, {\"row_number\", Int64.Type}, {\"record_id\", type text}, {\"rule_name\", type text}, {\"field\", type text}, {\"message\", type text}, {\"event_date\", type date}, {\"pipeline_name\", type text}, {\"component_family\", type text}, {\"plant\", type text}, {\"run_status\", type text}}, \"en-US\")",
+                "in",
+                "    Typed"
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "name": "Components",
+        "columns": [
+          {
+            "name": "code",
+            "dataType": "string",
+            "sourceColumn": "code",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "name",
+            "dataType": "string",
+            "sourceColumn": "name",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "family",
+            "dataType": "string",
+            "sourceColumn": "family",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "nominal_voltage",
+            "dataType": "double",
+            "sourceColumn": "nominal_voltage",
+            "summarizeBy": "none"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "Components",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Source = Csv.Document(Web.Contents(ApiBaseUrl, [RelativePath=\"api/powerbi/components\"]), [Delimiter=\",\", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),",
+                "    Headers = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),",
+                "    Typed = Table.TransformColumnTypes(Headers, {{\"code\", type text}, {\"name\", type text}, {\"family\", type text}, {\"nominal_voltage\", type number}}, \"en-US\")",
+                "in",
+                "    Typed"
+              ]
+            }
+          }
+        ]
+      }
+    ],
+    "expressions": [
+      {
+        "name": "ApiBaseUrl",
+        "kind": "m",
+        "expression": "\"http://127.0.0.1:5088\" meta [IsParameterQuery=true, Type=\"Text\", IsParameterQueryRequired=true]"
+      }
+    ],
+    "relationships": [
+      {
+        "name": "Runs_Events",
+        "fromTable": "Events",
+        "fromColumn": "run_id",
+        "toTable": "Runs",
+        "toColumn": "run_id",
+        "crossFilteringBehavior": "oneDirection"
+      },
+      {
+        "name": "Runs_Errors",
+        "fromTable": "Errors",
+        "fromColumn": "run_id",
+        "toTable": "Runs",
+        "toColumn": "run_id",
+        "crossFilteringBehavior": "oneDirection"
+      }
+    ],
+    "annotations": [
+      {
+        "name": "PBI_QueryOrder",
+        "value": "[\"ApiBaseUrl\",\"Runs\",\"Events\",\"Errors\",\"Components\"]"
+      }
+    ]
+  }
+}
